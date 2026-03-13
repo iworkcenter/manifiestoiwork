@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I WORK – Centro de Experiencia IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--black:#020408;--deep:#050c14;--surface:#0a1628;--card:#0d1f38;--border:rgba(0,180,255,0.12);--blue:#00b4ff;--cyan:#00e5ff;--violet:#7b2fff;--green:#00ffb3;--amber:#ffb800;--white:#f0f6ff;--muted:rgba(240,246,255,0.45);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif;overflow:hidden;height:100vh;user-select:none;}
+.deck{width:100vw;height:100vh;position:relative;}
+.slide{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .55s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.4,0,.2,1);transform:translateX(36px);display:flex;align-items:center;justify-content:center;padding:80px 6vw 56px;}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0);}
+.slide.out{opacity:0;transform:translateX(-36px);}
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(0,180,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,180,255,0.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;}
+.bg-glow{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 60% at 15% 55%,rgba(0,100,200,0.07),transparent),radial-gradient(ellipse 60% 70% at 85% 20%,rgba(123,47,255,0.05),transparent);pointer-events:none;}
+/* LOGOS */
+.logos-bar{position:fixed;top:22px;left:32px;z-index:100;display:flex;align-items:center;gap:14px;}
+.logo-img{height:30px;object-fit:contain;filter:brightness(1.05);}
+.logo-sep{width:1px;height:26px;background:var(--border);}
+/* COUNTER */
+.counter{position:fixed;top:26px;right:32px;z-index:100;font-family:'Syne',sans-serif;font-size:11px;letter-spacing:0.15em;color:var(--muted);}
+/* NAV */
+.nav-btn{position:fixed;top:50%;z-index:100;background:rgba(0,180,255,0.06);border:1px solid var(--border);color:var(--muted);font-size:16px;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;backdrop-filter:blur(8px);}
+.nav-btn:hover{background:rgba(0,180,255,0.15);color:var(--white);border-color:rgba(0,229,255,0.3);}
+#prev{left:20px;transform:translateY(-50%);}
+#next{right:20px;transform:translateY(-50%);}
+.nav{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:100;align-items:center;}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.18);cursor:pointer;transition:all .25s;}
+.dot.active{background:var(--cyan);width:22px;border-radius:3px;}
+.dot:hover{background:rgba(0,229,255,0.45);}
+/* WA */
+.wa-btn{position:fixed;bottom:28px;right:24px;z-index:200;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;box-shadow:0 4px 20px rgba(37,211,102,0.35);transition:all .3s;animation:waPulse 2.5s ease-in-out infinite;}
+.wa-btn:hover{transform:scale(1.1);}
+.wa-btn svg{width:25px;height:25px;fill:white;}
+@keyframes waPulse{0%,100%{box-shadow:0 4px 20px rgba(37,211,102,0.3);}50%{box-shadow:0 4px 36px rgba(37,211,102,0.6);}}
+/* TYPO */
+h1{font-family:'Syne',sans-serif;font-weight:800;line-height:1.0;letter-spacing:-0.02em;}
+h2{font-family:'Syne',sans-serif;font-weight:700;letter-spacing:-0.01em;}
+.label{font-family:'Syne',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;display:inline-flex;align-items:center;gap:8px;}
+.label::before{content:'';width:18px;height:1px;background:var(--cyan);}
+.tag{display:inline-block;padding:4px 12px;border-radius:20px;border:1px solid rgba(0,229,255,0.3);font-size:11px;font-weight:500;color:var(--cyan);background:rgba(0,229,255,0.05);}
+.divider{width:36px;height:2px;background:var(--cyan);margin:16px 0;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px 26px;position:relative;overflow:hidden;transition:border-color .3s;}
+.card:hover{border-color:rgba(0,229,255,0.22);}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,229,255,0.25),transparent);}
+.hint{position:fixed;bottom:64px;right:24px;z-index:50;font-size:9.5px;color:rgba(255,255,255,0.12);letter-spacing:0.1em;}
+
+/* S1 HERO */
+#s1{flex-direction:column;text-align:center;}
+.hero-h1{font-size:clamp(56px,9vw,128px);color:var(--white);margin-bottom:10px;}
+.hero-h1 span{color:var(--cyan);}
+.hero-sub{font-size:clamp(13px,1.4vw,17px);color:var(--muted);max-width:520px;line-height:1.75;margin-bottom:36px;}
+.hero-cta{display:inline-flex;align-items:center;gap:10px;background:var(--cyan);color:var(--black);font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;padding:13px 30px;border-radius:4px;cursor:pointer;text-decoration:none;transition:all .3s;}
+.hero-cta:hover{background:white;}
+.hero-stats{display:flex;gap:44px;margin-top:44px;justify-content:center;}
+.hstat-num{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--cyan);}
+.hstat-label{font-size:10px;color:var(--muted);letter-spacing:0.1em;margin-top:3px;}
+.hero-line{position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:0.25;}
+
+/* S2 MANIFESTO */
+#s2{flex-direction:column;align-items:flex-start;}
+.manifesto-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;width:100%;margin-top:28px;}
+.m-card{padding:26px;}
+.m-icon{font-size:20px;margin-bottom:12px;}
+.m-card h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:10px;}
+.m-card p{font-size:12.5px;color:var(--muted);line-height:1.7;}
+
+/* S3 */
+#s3{align-items:center;gap:48px;}
+.qe-left{flex:1;}
+.qe-right{flex:1;display:flex;flex-direction:column;gap:14px;}
+.no-yes{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.no-box{padding:18px 20px;border-radius:10px;}
+.no-box.no{border:1px solid rgba(255,60,60,0.15);background:rgba(255,60,60,0.03);}
+.no-box.yes{border:1px solid rgba(0,229,255,0.2);background:rgba(0,229,255,0.03);}
+.no-box h4{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;margin-bottom:10px;}
+.no-box.no h4{color:#ff7070;}.no-box.yes h4{color:var(--cyan);}
+.no-box ul{list-style:none;}
+.no-box li{font-size:11.5px;color:var(--muted);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:7px;}
+
+/* S4 */
+#s4{flex-direction:column;align-items:flex-start;}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%;margin-top:24px;}
+.step{padding:26px 30px;position:relative;}
+.step-num{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:rgba(0,229,255,0.06);position:absolute;top:14px;right:18px;line-height:1;}
+.step h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:9px;color:var(--cyan);}
+.step p{font-size:12.5px;color:var(--muted);line-height:1.7;}
+
+/* S5 BIFLEX */
+#s5{flex-direction:column;align-items:center;text-align:center;}
+.biflex-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:22px;align-items:center;width:100%;margin-top:28px;}
+.bf-card{padding:26px;text-align:left;}
+.bf-plus{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:var(--cyan);opacity:0.35;}
+.bf-card h3{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:9px;}
+.bf-card p{font-size:12px;color:var(--muted);line-height:1.7;}
+.biflex-result{margin-top:22px;padding:18px 28px;border:1px solid var(--border);border-radius:10px;background:rgba(0,229,255,0.03);font-size:12.5px;color:var(--muted);max-width:680px;}
+.biflex-result strong{color:var(--cyan);}
+
+/* S6 JOURNEY */
+#s6{flex-direction:column;align-items:flex-start;}
+.journey{display:flex;gap:0;width:100%;margin-top:22px;}
+.jstep{flex:1;padding:20px 18px;border-top:2px solid rgba(0,229,255,0.08);transition:all .3s;}
+.jstep:hover{border-top-color:var(--cyan);}
+.jn{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:rgba(255,255,255,0.05);margin-bottom:7px;}
+.jstep:hover .jn{color:var(--cyan);}
+.jstep h3{font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;margin-bottom:7px;}
+.jstep p{font-size:11px;color:var(--muted);line-height:1.6;}
+.transform-states{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;width:100%;margin-top:18px;}
+.ts{padding:14px 18px;border-radius:8px;}
+.ts.before{border:1px solid rgba(255,100,100,0.15);}
+.ts.during{border:1px solid rgba(255,200,0,0.15);}
+.ts.after{border:1px solid rgba(0,229,255,0.2);}
+.ts h4{font-family:'Syne',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:0.12em;margin-bottom:9px;}
+.ts.before h4{color:#ff8080;}.ts.during h4{color:#ffd060;}.ts.after h4{color:var(--cyan);}
+.ts p{font-size:11px;color:var(--muted);line-height:1.6;}
+
+/* S7 PRODUCTOS */
+#s7{flex-direction:column;align-items:flex-start;}
+.prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%;margin-top:20px;}
+.prod-card{padding:26px 28px;}
+.prod-num{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--cyan);letter-spacing:0.15em;margin-bottom:10px;}
+.prod-card h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:7px;}
+.prod-card .desc{font-size:12px;color:var(--muted);line-height:1.65;margin-bottom:14px;}
+.prod-plans{display:flex;gap:10px;margin-top:12px;}
+.plan-pill{padding:7px 10px;border-radius:6px;text-align:center;flex:1;}
+.plan-pill.basic{background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.18);}
+.plan-pill.start{background:rgba(123,47,255,0.08);border:1px solid rgba(123,47,255,0.22);}
+.plan-pill.gold{background:rgba(255,184,0,0.07);border:1px solid rgba(255,184,0,0.22);}
+.pname{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.1em;margin-bottom:3px;text-transform:uppercase;}
+.plan-pill.basic .pname{color:var(--cyan);}.plan-pill.start .pname{color:#a070ff;}.plan-pill.gold .pname{color:var(--amber);}
+.pimpl{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--white);}
+.psub{font-size:9px;color:var(--muted);}
+.prod-b2b{margin-top:12px;padding:12px 16px;border-radius:8px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.prod-b2b span{font-size:11px;color:var(--muted);}
+.prod-b2b strong{font-family:'Syne',sans-serif;font-size:15px;color:var(--cyan);}
+
+/* S8 CHART */
+#s8{flex-direction:column;align-items:flex-start;padding:70px 4vw 46px;}
+.chart-main{width:100%;flex:1;display:flex;gap:18px;min-height:0;}
+.chart-canvas-wrap{flex:1;position:relative;min-height:0;}
+.chart-right{width:205px;display:flex;flex-direction:column;gap:7px;overflow-y:auto;}
+.month-btn{padding:7px 11px;border-radius:6px;cursor:pointer;border:1px solid rgba(0,180,255,0.1);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;transition:all .2s;text-align:left;display:flex;justify-content:space-between;align-items:center;width:100%;}
+.month-btn:hover{border-color:rgba(0,229,255,0.3);color:var(--white);background:rgba(0,229,255,0.04);}
+.month-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,0.07);}
+.mval{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;}
+.chart-kpis{display:flex;gap:14px;flex-wrap:wrap;}
+.kpi-v{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:var(--cyan);}
+.kpi-l{font-size:9.5px;color:var(--muted);letter-spacing:0.08em;margin-top:2px;text-transform:uppercase;}
+.cleg-row{display:flex;gap:14px;margin-top:5px;flex-wrap:wrap;}
+.cleg{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);}
+.cleg-dot{width:10px;height:10px;border-radius:2px;}
+
+/* S9 */
+#s9{flex-direction:column;align-items:flex-start;}
+.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%;margin-top:24px;}
+.exp-card{padding:22px 26px;}
+.exp-phase{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--cyan);letter-spacing:0.15em;margin-bottom:9px;}
+.exp-card h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:7px;}
+.exp-card p{font-size:12px;color:var(--muted);line-height:1.65;}
+.exp-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;width:100%;margin-top:18px;}
+.exp-m{text-align:center;padding:14px;border:1px solid var(--border);border-radius:8px;}
+.exp-m-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
+.exp-m-label{font-size:9.5px;color:var(--muted);margin-top:3px;}
+
+/* S10 CTA */
+#s10{flex-direction:column;text-align:center;background:radial-gradient(ellipse 80% 55% at 50% 50%,rgba(0,100,200,0.09),transparent);}
+.cta-big{font-size:clamp(34px,5.5vw,82px);line-height:1.05;margin-bottom:18px;}
+.cta-big span{color:var(--cyan);}
+.cta-sub{font-size:clamp(12px,1.25vw,15px);color:var(--muted);max-width:480px;line-height:1.75;margin-bottom:36px;}
+.cta-buttons{display:flex;gap:14px;justify-content:center;}
+.btn-primary{padding:13px 30px;background:var(--cyan);color:var(--black);font-family:'Syne',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase;border-radius:4px;cursor:pointer;text-decoration:none;transition:all .3s;}
+.btn-primary:hover{background:white;}
+.btn-secondary{padding:13px 30px;background:transparent;color:var(--white);font-family:'Syne',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:0.08em;text-transform:uppercase;border:1px solid rgba(255,255,255,0.18);border-radius:4px;cursor:pointer;text-decoration:none;transition:all .3s;}
+.btn-secondary:hover{border-color:var(--cyan);color:var(--cyan);}
+.cta-quote{margin-top:44px;font-family:'Syne',sans-serif;font-size:12px;color:rgba(0,229,255,0.4);letter-spacing:0.15em;font-style:italic;}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<!-- LOGOS -->
+<div class="logos-bar">
+  <img class="logo-img" src="LOGO_NUEVO_BPOS-02.png" alt="BPOS"
+    onerror="this.style.display='none';document.getElementById('bt').style.display='flex'">
+  <div id="bt" style="display:none;align-items:center;gap:5px;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:white;"><span style="color:#00e5ff;font-size:18px;">●</span>BPOS</div>
+  <div class="logo-sep"></div>
+  <img class="logo-img" src="LOGO_WORKI_ICONO_BLANCO-05.png" alt="WORKI" style="height:26px;"
+    onerror="this.style.display='none';document.getElementById('wt').style.display='block'">
+  <div id="wt" style="display:none;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:white;letter-spacing:0.08em;">WORKI</div>
+</div>
+
+<div class="counter" id="counter">01 / 10</div>
+<button class="nav-btn" id="prev" onclick="changeSlide(-1)">←</button>
+<button class="nav-btn" id="next" onclick="changeSlide(1)">→</button>
+<div class="nav" id="dots"></div>
+<div class="hint">← → NAVEGAR</div>
+
+<a class="wa-btn" href="https://wa.me/573181753856?text=Hola!%20Quiero%20conocer%20m%C3%A1s%20sobre%20I%20WORK%20IA" target="_blank" title="WhatsApp +57 318 175 3856">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<div class="deck">
+
+<!-- SLIDE 1 HERO -->
+<section class="slide active" id="s1">
+  <div style="text-align:center;position:relative;width:100%;">
+    <div style="margin-bottom:28px;"><span class="tag">Centro de Experiencia IA · Apertura Abril 2026</span></div>
+    <h1 class="hero-h1">I <span>WORK</span></h1>
+    <p class="hero-sub">El lugar donde los humanos activan cerebros digitales para trabajar de forma inteligente, flexible y exponencial.</p>
+    <a class="hero-cta" href="https://wa.me/573181753856?text=Quiero%20conocer%20I%20WORK%20IA" target="_blank">Quiero probarlo →</a>
+    <div class="hero-stats">
+      <div><div class="hstat-num">500K</div><div class="hstat-label">Profesionales proyectados</div></div>
+      <div><div class="hstat-num">25+</div><div class="hstat-label">Torres LatAm</div></div>
+      <div><div class="hstat-num">18</div><div class="hstat-label">Países objetivo</div></div>
+      <div><div class="hstat-num">$120M</div><div class="hstat-label">Revenue año 3</div></div>
+    </div>
+    <div class="hero-line"></div>
+  </div>
+</section>
+
+<!-- SLIDE 2 MANIFESTO -->
+<section class="slide" id="s2">
+  <div style="width:100%">
+    <div class="label">Manifiesto</div>
+    <h2 style="font-size:clamp(28px,4vw,50px);max-width:600px;line-height:1.1;">El Futuro del Trabajo<br>Ya Está Aquí</h2>
+    <div class="manifesto-grid">
+      <div class="card m-card"><div class="m-icon">⚡</div><h3>Potenciamos Humanos</h3><p>La IA no reemplaza, amplifica. Convertimos profesionales en superhéroes empresariales con capacidades exponenciales que antes eran impensables.</p></div>
+      <div class="card m-card"><div class="m-icon">🧪</div><h3>Experiencia, No Teoría</h3><p>No enseñamos IA. La vivimos. Cada interacción es una transformación real, medible, inmediata. El conocimiento se instala haciendo, no escuchando.</p></div>
+      <div class="card m-card"><div class="m-icon">📈</div><h3>ROI Desde el Día Uno</h3><p>Olvídate de cursos lentos. El retorno comienza en la primera sesión con soluciones aplicadas directamente a tu negocio desde el minuto uno.</p></div>
+    </div>
+    <p style="margin-top:22px;font-size:12.5px;color:rgba(0,229,255,0.45);font-family:'Syne',sans-serif;letter-spacing:0.12em;font-style:italic;">"El futuro del trabajo no se aprende. Se experimenta."</p>
+  </div>
+</section>
+
+<!-- SLIDE 3 QUÉ ES -->
+<section class="slide" id="s3">
+  <div class="qe-left">
+    <div class="label">Identidad</div>
+    <h2 style="font-size:clamp(28px,3.5vw,52px);max-width:440px;line-height:1.1;margin-bottom:14px;">Redefiniendo<br>la Experiencia<br>Corporativa</h2>
+    <div class="divider"></div>
+    <p style="font-size:12.5px;color:var(--muted);line-height:1.75;max-width:380px;">I WORK es donde los ejecutivos descubren que sus límites eran solo temporales. El puente entre potencial humano y la capacidad infinita de la IA.</p>
+  </div>
+  <div class="qe-right">
+    <div class="no-yes">
+      <div class="no-box no"><h4>✕ Lo que NO somos</h4><ul><li><span>✗</span>Oficina tradicional</li><li><span>✗</span>Curso online de IA</li><li><span>✗</span>Formación teórica</li><li><span>✗</span>Consultoría convencional</li></ul></div>
+      <div class="no-box yes"><h4>✓ Lo que SÍ somos</h4><ul><li><span>→</span>Experiencia inmersiva IA</li><li><span>→</span>Lab transformación real</li><li><span>→</span>Ecosistema co-inteligente</li><li><span>→</span>Resultados medibles</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 4 METODOLOGÍA -->
+<section class="slide" id="s4">
+  <div style="width:100%">
+    <div class="label">Metodología</div>
+    <h2 style="font-size:clamp(22px,3vw,42px);">Cómo Funciona I WORK</h2>
+    <div class="steps">
+      <div class="card step"><span class="step-num">01</span><h3>Diagnóstico Express</h3><p>Análisis inmediato de necesidades mediante IA. Identificamos oportunidades de mejora en ventas, operaciones y productividad en menos de 30 minutos.</p></div>
+      <div class="card step"><span class="step-num">02</span><h3>Inmersión Práctica</h3><p>Sesiones hands-on con herramientas IA aplicadas directamente a casos reales de tu negocio. Cero teoría, 100% aplicación desde el inicio.</p></div>
+      <div class="card step"><span class="step-num">03</span><h3>Construcción de Soluciones</h3><p>Co-creamos agentes de IA, automatizaciones y sistemas inteligentes específicos. Te vas con herramientas funcionando ese mismo día.</p></div>
+      <div class="card step"><span class="step-num">04</span><h3>Implementación y Escala</h3><p>Acompañamiento continuo post-sesión. Medimos resultados, ajustamos estrategias y escalamos soluciones según el crecimiento de tu negocio.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 5 BIFLEX -->
+<section class="slide" id="s5">
+  <div style="width:100%;text-align:center;">
+    <div class="label" style="justify-content:center;">Alianza Estratégica</div>
+    <h2 style="font-size:clamp(26px,3.5vw,50px);">I WORK + REGUS = <span style="color:var(--cyan)">Sistema BIFLEX</span></h2>
+    <p style="font-size:12.5px;color:var(--muted);max-width:480px;margin:10px auto 26px;line-height:1.7;">La fusión que redefine el futuro del trabajo 2026–2030</p>
+    <div class="biflex-grid">
+      <div class="card bf-card" style="text-align:left;"><h3>🏢 REGUS — Infraestructura Física Premium</h3><p>Red global de espacios de trabajo de élite, ubicaciones estratégicas y entorno profesional impecable en toda Latinoamérica.</p></div>
+      <div class="bf-plus">+</div>
+      <div class="card bf-card" style="text-align:left;"><h3>🧠 I WORK — El Cerebro Digital</h3><p>IA que piensa como humano. Metodología probada, agentes especializados y ecosistema de transformación empresarial en tiempo real.</p></div>
+    </div>
+    <div class="biflex-result"><strong>BIFLEX</strong>: Infraestructura física de vanguardia + Inteligencia digital sin precedentes = El nuevo estándar de trabajo co-inteligente para empresas que compiten globalmente.</div>
+  </div>
+</section>
+
+<!-- SLIDE 6 JOURNEY -->
+<section class="slide" id="s6">
+  <div style="width:100%">
+    <div class="label">Viaje Transformacional</div>
+    <h2 style="font-size:clamp(20px,2.8vw,38px);margin-bottom:4px;">La Experiencia I WORK</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">De curioso a arquitecto del futuro con IA.</p>
+    <div class="journey">
+      <div class="jstep"><div class="jn">01</div><h3>Descubrimiento</h3><p>Inmersión inicial en el universo IA.</p></div>
+      <div class="jstep"><div class="jn">02</div><h3>Exploración</h3><p>Asistentes, automatizaciones, análisis predictivos.</p></div>
+      <div class="jstep"><div class="jn">03</div><h3>Experimentación</h3><p>Construyes tus primeros agentes digitales.</p></div>
+      <div class="jstep"><div class="jn">04</div><h3>Integración</h3><p>Conectas con el ecosistema que escala tus proyectos.</p></div>
+      <div class="jstep"><div class="jn">05</div><h3>Transformación</h3><p>Líder de la era co-inteligente en tu sector.</p></div>
+    </div>
+    <div class="transform-states">
+      <div class="ts before"><h4>Antes de I WORK</h4><p>Procesos manuales · Intuición sin datos · Productividad limitada · Ventas estancadas</p></div>
+      <div class="ts during"><h4>Durante I WORK</h4><p>Construcción de herramientas · Validación en tiempo real · Primeros resultados tangibles</p></div>
+      <div class="ts after"><h4>Después de I WORK</h4><p>Automatización activa · Data-driven · Productividad 10x · Crecimiento exponencial</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 7 PRODUCTOS con precios reales -->
+<section class="slide" id="s7">
+  <div style="width:100%">
+    <div class="label">Portafolio de Infoproductos</div>
+    <h2 style="font-size:clamp(20px,2.8vw,36px);margin-bottom:3px;">Soluciones I WORK — Precios Reales</h2>
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:16px;">Implementación inmediata. ROI medible desde la primera semana.</p>
+    <div class="prod-grid">
+      <div class="card prod-card">
+        <div class="prod-num">INFOPRODUCTO 01 — GENESIS · empleadosdigitales</div>
+        <h3>Empleados Digitales</h3>
+        <p class="desc">Agentes de IA entrenados con el ADN de tu negocio. Responden WhatsApp 24/7, agendan citas y cierran ventas como humanos — sin que tú muevas un dedo.</p>
+        <div class="prod-plans">
+          <div class="plan-pill basic"><div class="pname">Básico</div><div class="pimpl">$200</div><div class="psub">impl · $10/mes</div></div>
+          <div class="plan-pill start"><div class="pname">★ Start</div><div class="pimpl">$500</div><div class="psub">impl · $11/mes</div></div>
+          <div class="plan-pill gold"><div class="pname">Gold</div><div class="pimpl">$800</div><div class="psub">impl · $12/mes</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:rgba(0,229,255,0.5);">✓ 1er mes gratis en Básico · ✓ Listo en 2–8 semanas · ✓ Diagnóstico gratis</div>
+      </div>
+      <div class="card prod-card">
+        <div class="prod-num">INFOPRODUCTO 02 — TRABAJO INTELIGENTE · Microsoft Partner</div>
+        <h3>Trabajo Inteligente</h3>
+        <p class="desc">Activamos el ecosistema Microsoft 365 que ya pagaste. Power Automate, Copilot IA, SharePoint y Azure — implementados en 9 fases. Sin escribir código.</p>
+        <div class="prod-b2b">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:9.5px;color:var(--cyan);letter-spacing:0.1em;margin-bottom:3px;">B2B · PYME (hasta 50 usuarios)</div>
+            <strong>$3,500</strong><span> impl · $250/mes</span>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Syne',sans-serif;font-size:9.5px;color:var(--amber);letter-spacing:0.1em;margin-bottom:3px;">B2B · ENTERPRISE (50+ usuarios)</div>
+            <strong style="color:var(--amber);">$6,500</strong><span> impl · $450/mes</span>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:rgba(255,184,0,0.5);">✓ Growth Partner Microsoft ✓ 9 fases ✓ Acompañamiento continuo</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:11px 18px;background:rgba(0,229,255,0.03);border:1px solid rgba(0,229,255,0.1);border-radius:8px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;">
+      <span>Ambos productos: <strong style="color:var(--cyan)">implementación en minutos, ROI en días.</strong> La IA se adapta al usuario, no al revés.</span>
+      <a href="https://wa.me/573181753856" target="_blank" style="color:var(--cyan);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:0.08em;white-space:nowrap;margin-left:16px;">COTIZAR →</a>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 8 GRÁFICO INTERACTIVO con precios reales -->
+<section class="slide" id="s8">
+  <div style="width:100%;height:100%;display:flex;flex-direction:column;">
+    <div class="label" style="margin-bottom:6px;">Proyección Financiera · Precios Reales</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h2 style="font-size:clamp(16px,2.2vw,30px);line-height:1.15;">Crecimiento desde <span style="color:var(--cyan)">Apertura Abril 2026</span></h2>
+        <div class="cleg-row">
+          <div class="cleg"><div class="cleg-dot" style="background:rgba(0,229,255,0.6);"></div>GENESIS (impl+subs)</div>
+          <div class="cleg"><div class="cleg-dot" style="background:rgba(123,47,255,0.6);"></div>Trab. Inteligente B2B</div>
+          <div class="cleg"><div class="cleg-dot" style="background:rgba(255,255,255,0.2);border:1px dashed rgba(255,255,255,0.35);"></div>Proyección tendencia</div>
+        </div>
+      </div>
+      <div class="chart-kpis">
+        <div><div class="kpi-v" id="kpi-total">$10,800</div><div class="kpi-l">Ingreso mes</div></div>
+        <div><div class="kpi-v" id="kpi-genesis" style="color:var(--cyan);">$1,044</div><div class="kpi-l">GENESIS</div></div>
+        <div><div class="kpi-v" id="kpi-ti" style="color:#a070ff;">$9,756</div><div class="kpi-l">T. Inteligente</div></div>
+        <div><div class="kpi-v" id="kpi-proj" style="color:var(--amber);">3</div><div class="kpi-l">Proyectos</div></div>
+        <div><div class="kpi-v" id="kpi-ag" style="color:var(--green);">10</div><div class="kpi-l">Agentes IA</div></div>
+      </div>
+    </div>
+    <div class="chart-main">
+      <div class="chart-canvas-wrap"><canvas id="growthChart"></canvas></div>
+      <div class="chart-right" id="monthBtns">
+        <p style="font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px;">Clic en un mes</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 9 EXPANSIÓN -->
+<section class="slide" id="s9">
+  <div style="width:100%">
+    <div class="label">Globalización</div>
+    <h2 style="font-size:clamp(20px,2.8vw,38px);margin-bottom:4px;">I WORK TOWER IA en Latinoamérica</h2>
+    <div class="exp-grid">
+      <div class="card exp-card"><div class="exp-phase">FASE 1 · 2025–Q1 2026</div><h3>🇨🇴 Colombia</h3><p>Barranquilla · Medellín · Bogotá. Validación del modelo con resultados reales desde la primera sesión presencial.</p></div>
+      <div class="card exp-card"><div class="exp-phase">FASE 2 · Q4 2025</div><h3>🌎 Expansión Andina</h3><p>Lima, Santiago, Buenos Aires. Economías emergentes con gran demanda de capacitación ejecutiva en IA.</p></div>
+      <div class="card exp-card"><div class="exp-phase">FASE 3 · Q1 2026</div><h3>🇲🇽 Ciudad de México</h3><p>El mercado más grande y competitivo. Proyectos B2B Microsoft + IA en empresas líderes de cada sector.</p></div>
+      <div class="card exp-card"><div class="exp-phase">FASE 4 · Q3 2026</div><h3>🌍 Consolidación Regional</h3><p>Ciudades secundarias y Centro América. Red completa de 25+ torres interconectadas cubriendo toda la región.</p></div>
+    </div>
+    <div class="exp-metrics">
+      <div class="exp-m"><div class="exp-m-num" style="color:var(--cyan);">25+</div><div class="exp-m-label">Torres 2026</div></div>
+      <div class="exp-m"><div class="exp-m-num" style="color:var(--violet);">18</div><div class="exp-m-label">Países objetivo</div></div>
+      <div class="exp-m"><div class="exp-m-num" style="color:var(--green);">500K</div><div class="exp-m-label">Profesionales</div></div>
+      <div class="exp-m"><div class="exp-m-num" style="color:var(--amber);">$120M</div><div class="exp-m-label">Revenue año 3</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 10 CTA -->
+<section class="slide" id="s10">
+  <h1 class="cta-big">El futuro<br>del trabajo<br><span>no se aprende.</span><br>Se experimenta.</h1>
+  <p class="cta-sub">Únete a la red de profesionales y empresas que ya están construyendo el nuevo estándar del trabajo inteligente en Latinoamérica.</p>
+  <div class="cta-buttons">
+    <a class="btn-primary" href="https://wa.me/573181753856?text=Quiero%20agendar%20mi%20primera%20sesi%C3%B3n%20en%20I%20WORK" target="_blank">Agenda tu primera sesión →</a>
+    <a class="btn-secondary" href="https://wa.me/573181753856?text=Quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20I%20WORK" target="_blank">Más información</a>
+  </div>
+  <p class="cta-quote">Bienvenido a I WORK · El nuevo sistema de trabajo inteligente · +57 318 175 3856</p>
+</section>
+
+</div>
+
+<script>
+// ── SLIDES ──────────────────────────────────────────────────────────────────
+let current=0,chartReady=false;
+const slides=document.querySelectorAll('.slide'),total=slides.length;
+function buildDots(){const n=document.getElementById('dots');for(let i=0;i<total;i++){const d=document.createElement('div');d.className='dot'+(i===0?' active':'');d.onclick=()=>goTo(i);n.appendChild(d);}}
+function updateNav(n){document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===n));document.getElementById('counter').textContent=String(n+1).padStart(2,'0')+' / '+String(total).padStart(2,'0');}
+function goTo(n){if(n<0||n>=total||n===current)return;slides[current].classList.remove('active');slides[current].classList.add('out');const p=current;setTimeout(()=>slides[p].classList.remove('out'),600);current=n;slides[current].classList.add('active');updateNav(current);if(current===7&&!chartReady)initChart();}
+function changeSlide(d){goTo(current+d);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')changeSlide(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')changeSlide(-1);});
+buildDots();
+
+// ── FINANCIAL DATA (based on real product prices) ────────────────────────────
+// GENESIS: Básico $200+$10/mes | Start $500+$11/mes | Gold $800+$12/mes
+// Trabajo Inteligente: PYME $3,500+$250/mes | Enterprise $6,500+$450/mes
+// Model: monthly impl revenue + cumulative recurring subscriptions
+
+const MESES=['Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MESES_F=['Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const PROYECTOS=[3,5,8,10,12,15,18,20,25];
+const AGENTES=[10,20,40,60,85,120,165,215,280];
+
+// GENESIS: 2 Gold($800) + 3 Start($500) + resto Básico($200) per month + cumul $12/agent
+// Avg GENESIS deal = ~$550 impl; TI avg = ~$4,200 (mix PYME+Enterprise)
+const GENESIS_REV=[1044,1738,2565,3514,4584,5790,7120,8136,10000];
+const TI_REV=     [9756,17562,30035,39386,50691,68370,86180,100594,134500];
+const TOTAL_REV=GENESIS_REV.map((v,i)=>v+TI_REV[i]);
+
+function trendData(idx){
+  return MESES.map((_,i)=>{
+    if(i<=idx)return TOTAL_REV[i];
+    const g=1.18+0.025*(i-idx);
+    return Math.round(TOTAL_REV[idx]*Math.pow(g,i-idx));
+  });
+}
+function fmt(n){if(n>=1000000)return'$'+(n/1000000).toFixed(1)+'M';if(n>=1000)return'$'+(n/1000).toFixed(0)+'K';return'$'+n.toLocaleString();}
+
+let chartInst=null;
+function initChart(){
+  chartReady=true;
+  const sb=document.getElementById('monthBtns');
+  MESES.forEach((m,i)=>{
+    const b=document.createElement('button');
+    b.className='month-btn'+(i===0?' active':'');
+    b.innerHTML='<span>'+MESES_F[i]+'</span><span class="mval">'+fmt(TOTAL_REV[i])+'</span>';
+    b.onclick=()=>selectMonth(i);
+    sb.appendChild(b);
+  });
+  const ctx=document.getElementById('growthChart').getContext('2d');
+  chartInst=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:MESES,
+      datasets:[
+        {label:'GENESIS',data:GENESIS_REV,backgroundColor:'rgba(0,229,255,0.25)',borderColor:'#00e5ff',borderWidth:1.5,borderRadius:4,order:2},
+        {label:'T. Inteligente B2B',data:TI_REV,backgroundColor:'rgba(123,47,255,0.28)',borderColor:'#7b2fff',borderWidth:1.5,borderRadius:4,order:2},
+        {label:'Proyección',data:trendData(0),type:'line',borderColor:'rgba(255,255,255,0.22)',borderWidth:2,borderDash:[5,4],pointRadius:3,pointBackgroundColor:'rgba(255,255,255,0.25)',fill:false,tension:0.4,order:1}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'rgba(5,12,20,0.95)',borderColor:'rgba(0,229,255,0.2)',borderWidth:1,
+          titleColor:'#00e5ff',bodyColor:'rgba(240,246,255,0.7)',
+          titleFont:{family:'Syne',size:12,weight:'700'},bodyFont:{family:'DM Sans',size:11},
+          callbacks:{
+            title:c=>MESES_F[c[0].dataIndex]+' 2026',
+            label:c=>{
+              const lb=['  GENESIS (impl+subs):','  Trab. Inteligente (B2B):','  Proyección:'];
+              return lb[c.datasetIndex]+' '+fmt(c.raw);
+            },
+            afterBody:c=>{
+              const i=c[0].dataIndex;
+              return['  ───────────────────','  Nuevos proyectos: '+PROYECTOS[i],'  Agentes IA activos: '+AGENTES[i],'  TOTAL MES: '+fmt(TOTAL_REV[i])];
+            }
+          }
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{color:'rgba(0,180,255,0.05)'},ticks:{color:'rgba(240,246,255,0.45)',font:{family:'DM Sans',size:11}}},
+        y:{stacked:true,grid:{color:'rgba(0,180,255,0.05)'},ticks:{color:'rgba(240,246,255,0.4)',font:{family:'DM Sans',size:11},callback:v=>fmt(v)}}
+      }
+    }
+  });
+  selectMonth(0);
+}
+
+function selectMonth(idx){
+  if(!chartInst)return;
+  document.getElementById('kpi-total').textContent=fmt(TOTAL_REV[idx]);
+  document.getElementById('kpi-genesis').textContent=fmt(GENESIS_REV[idx]);
+  document.getElementById('kpi-ti').textContent=fmt(TI_REV[idx]);
+  document.getElementById('kpi-proj').textContent=PROYECTOS[idx];
+  document.getElementById('kpi-ag').textContent=AGENTES[idx];
+  chartInst.data.datasets[2].data=trendData(idx);
+  chartInst.data.datasets[0].backgroundColor=MESES.map((_,i)=>i===idx?'rgba(0,229,255,0.6)':'rgba(0,229,255,0.22)');
+  chartInst.data.datasets[1].backgroundColor=MESES.map((_,i)=>i===idx?'rgba(123,47,255,0.6)':'rgba(123,47,255,0.25)');
+  chartInst.update('active');
+  document.querySelectorAll('.month-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+}
+</script>
+</body>
+</html>
